@@ -1,7 +1,7 @@
 # Real E Tabla
 
 A virtual tabla player for accompanying bhajans, kirtans or just for fun.
-Real tabla recorded and looped. Tabla sounds played and recorded by Nilesh Kodikal.
+Real tabla sounds played and recorded by Nilesh Kodikal.
 Speed and key can be adjusted, and tanpura sound can be switched On/Off as desired. 
 Included counter shows the beat count.
 
