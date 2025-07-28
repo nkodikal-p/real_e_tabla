@@ -1,0 +1,157 @@
+html, body {
+    height: 100%;
+    font-family: Arial, sans-serif; /* Use a modern font */
+    color: #565656; /* Dark gray text color */
+    font-size: 16px;
+    justify-content: center;
+    align-items: center;
+    margin: 0; /* Remove default margin */
+    text-align: center; /* Center text inside elements */
+    flex-direction: column; /* Arrange items in a column */
+    display: flex; /* Use flexbox for layout */
+}
+
+.score-play-container {
+    display: flex;
+    /* Use flexbox to layout children */
+    align-items: center;
+    padding: 10px;
+    /* Set width to 50% */
+    font-family: Consolas, monospace;
+    font-size: 16px;
+    text-align: left;
+    /* Left-justify text */
+    padding: 10px;
+}
+.score-play-container h4 {
+    margin-top: 0;
+    font-size: 1.2em;
+}
+
+#score_text:focus {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    outline: none;
+}
+
+
+select, input {
+    font-size: inherit;
+    /* Inherit font size from body */
+    color: inherit;
+}
+
+#taaldisplay, #mindexDisplay {
+    display: flex;
+   flex-direction: row;
+   align-content: center;
+    font-size: inherit;
+}
+
+#taaldisplay h4 {
+    margin-top: 0;
+    font-size: 1.2em;
+}
+
+#taaldisplay #taal {
+    margin-top: 0;
+    text-align: center;
+    margin-left: 10px;
+}
+
+.modern-button {
+    background-color: #4CAF50;
+    /* Green */
+    border: none;
+    color: rgb(52, 52, 52);
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+    margin: 15px 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 5px #999;
+    /* Add box shadow for 3D effect */
+    transition-duration: 0.1s;
+}
+
+.modern-button.red {
+    background-color: #fc5757;
+    /* Red */
+}
+
+.modern-button:active {
+    box-shadow: 0 5px #666;
+    /* Reduce box shadow when button is clicked */
+    transform: translateY(4px);
+    /* Move button down when clicked */
+}
+
+input[type="number"] {
+    width: 75px; /* Set width to auto */
+    padding: 5px; /* Add some padding */
+    text-align: center; /* Center the text */
+}
+
+.bpm-container {
+    display: flex;
+    align-items: center;
+}
+
+.bpm-button {
+    margin: 0 5px;
+    font-size: 1.5em; /* Increase font size */
+    padding: 5px; /* Add padding for larger buttons */
+}
+img {
+    max-height: 80%; /* Scale down proportionally based on window size */
+    border-radius: 25%; /* Keep rounded corners */
+    position: relative; /* Ensure the image is positioned for the overlay */
+}
+
+#bpmValue {
+    display: inline-block;
+    width: 40px; /* Adjust width to fit 3 characters comfortably */
+    text-align: center;
+}
+
+
+.image-container {
+    position: relative; /* Ensure the container is positioned for the overlay */
+    display: flex; /* Use flexbox for centering */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    flex-direction: column; /* Stack elements vertically */
+    margin: 0 auto; /* Center the container horizontally */
+    height: auto; /* Adjust height to fit content */
+}
+
+.image-container img {
+    display: block; /* Remove extra spacing */
+    width: 90%; /* Restore original size */
+    height: auto; /* Maintain aspect ratio */
+}
+
+#matraText {
+    position: absolute;
+    top: 50%; /* Center vertically within the image */
+    left: 50%; /* Center horizontally within the image */
+    transform: translate(-50%, -50%); /* Adjust to align center */
+    color: #565656; /* Dark gray text */
+    background-color: #e0e0e0; /* Slightly lighter gray background */
+    font-size: 4.5em; /* Increase font size */
+    font-weight: bold; /* Make text bold */
+    pointer-events: none; /* Allow interaction with elements behind */
+    z-index: 10; /* Ensure it appears above the image */
+    width: 2ch; /* Fixed width for 2 characters */
+    text-align: center; /* Center the text */
+    border-radius: 8px; /* Slightly rounded corners */
+    padding: 2px; /* Add padding for better appearance */
+}
+
+#taaldisplay, #bpmDisplay {
+    margin-top: 0; /* Remove unnecessary spacing */
+    padding: 0; /* Remove padding */
+}
+
