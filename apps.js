@@ -11,7 +11,11 @@ const TAAL_MATRAS_COUNT = {
 class ETabla {
     // --- Tanpura logic ---
     setupTanpura() {
-        this.tanpuraAudio = null;
+        this.tanpuraAudioContext = null;
+        this.tanpuraSource = null;
+        this.tanpuraGain = null;
+        this.tanpuraBuffer = null;
+        this.tanpuraBufferUrl = null;
         this.tanpuraKey = this.currentKey;
         const tanpuraToggle = document.getElementById('tanpuraToggle');
         const tanpuraSwitchLabel = document.getElementById('tanpuraSwitchLabel');
@@ -36,8 +40,8 @@ class ETabla {
         // Volume slider event
         if (tanpuraVolume) {
             tanpuraVolume.addEventListener('input', (e) => {
-                if (this.tanpuraAudio) {
-                    this.tanpuraAudio.volume = parseFloat(e.target.value);
+                if (this.tanpuraGain) {
+                    this.tanpuraGain.gain.value = parseFloat(e.target.value);
                 }
             });
         }
@@ -51,33 +55,84 @@ class ETabla {
     }
 
     async playTanpura() {
-        this.stopTanpura();
+        // Stop any currently playing tanpura source immediately
+        if (this.tanpuraSource) {
+            try {
+                this.tanpuraSource.onended = null;
+                this.tanpuraSource.stop();
+            } catch (e) {}
+            this.tanpuraSource = null;
+        }
+        // Use a separate AudioContext for tanpura
+        if (!this.tanpuraAudioContext || this.tanpuraAudioContext.state === 'closed') {
+            this.tanpuraAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
         const key = this.currentKey;
         // Replace # with s for file lookup
         const fileKey = key.replace(/#/g, 's');
         const url = `sounds/tanpura/${fileKey}.mp3`;
-        this.tanpuraAudio = new Audio(url);
-        this.tanpuraAudio.loop = true;
-        // Set volume to slider value or default 0.25
+
+        // Load and decode the tanpura audio buffer
+        try {
+            if (!this.tanpuraBufferUrl || this.tanpuraBufferUrl !== url) {
+                // Only fetch and decode if URL changed
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                this.tanpuraBuffer = await this.tanpuraAudioContext.decodeAudioData(arrayBuffer);
+                this.tanpuraBufferUrl = url;
+            }
+        } catch (e) {
+            console.error('Failed to load tanpura buffer:', e);
+            return;
+        }
+
+        // Create a gain node for volume control
+        this.tanpuraGain = this.tanpuraAudioContext.createGain();
         const tanpuraVolume = document.getElementById('tanpuraVolume');
         if (tanpuraVolume) {
-            this.tanpuraAudio.volume = parseFloat(tanpuraVolume.value) || 0.25;
+            this.tanpuraGain.gain.value = parseFloat(tanpuraVolume.value) || 0.25;
         } else {
-            this.tanpuraAudio.volume = 0.25;
+            this.tanpuraGain.gain.value = 0.25;
         }
-        try {
-            await this.tanpuraAudio.play();
-        } catch (e) {
-            console.error('Failed to play tanpura:', e);
-        }
+
+        // Create and start the buffer source
+        this.tanpuraSource = this.tanpuraAudioContext.createBufferSource();
+        this.tanpuraSource.buffer = this.tanpuraBuffer;
+        this.tanpuraSource.connect(this.tanpuraGain).connect(this.tanpuraAudioContext.destination);
+        this.tanpuraSource.loop = false; // We'll handle looping manually
+        const startTime = this.tanpuraAudioContext.currentTime;
+        this.tanpuraSource.start(startTime);
+
+        // Schedule next loop exactly at the end, but only if toggle is still ON
+        this.tanpuraSource.onended = () => {
+            const tanpuraToggle = document.getElementById('tanpuraToggle');
+            if (tanpuraToggle && tanpuraToggle.checked) {
+                this.playTanpura();
+            }
+        };
     }
 
     stopTanpura() {
-        if (this.tanpuraAudio) {
-            this.tanpuraAudio.pause();
-            this.tanpuraAudio.currentTime = 0;
-            this.tanpuraAudio = null;
+        if (this.tanpuraSource) {
+            try {
+                this.tanpuraSource.onended = null;
+                this.tanpuraSource.stop();
+            } catch (e) {}
+            this.tanpuraSource = null;
         }
+        if (this.tanpuraGain) {
+            try {
+                this.tanpuraGain.disconnect();
+            } catch (e) {}
+            this.tanpuraGain = null;
+        }
+        if (this.tanpuraAudioContext) {
+            try {
+                this.tanpuraAudioContext.close();
+            } catch (e) {}
+            this.tanpuraAudioContext = null;
+        }
+        // Don't clear buffer or bufferUrl so we can reuse if key doesn't change
     }
     constructor() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -279,24 +334,45 @@ class ETabla {
             return;
         }
 
-        const source = this.audioContext.createBufferSource();
-        source.buffer = this.audioBuffer;
-        source.loop = true;
-        source.connect(this.audioContext.destination);
-        source.start(0);
+        // Store the source node for later stop
+        this.taalSource = this.audioContext.createBufferSource();
+        this.taalSource.buffer = this.audioBuffer;
+        this.taalSource.connect(this.audioContext.destination);
+        this.taalSource.loop = false; // We'll handle looping manually for perfect timing
+
+        // Calculate duration in seconds
+        const duration = this.audioBuffer.duration;
+
+        // Schedule the first play
+        const startTime = this.audioContext.currentTime;
+        this.taalSource.start(startTime);
 
         // Show the matra index
         const matraText = document.getElementById('matraText');
         matraText.style.display = 'block';
 
-        // Wait for 100ms before starting the matra counter
-        setTimeout(() => {
-            this.startMatraCounter();
-        }, 100); // Delay starting the matra counter by 100ms
+        // Start the matra counter in sync with audio
+        this.startMatraCounter();
+
+        // Schedule next loop exactly at the end
+        this.taalSource.onended = () => {
+            // Only loop if not stopped
+            if (this.taalSource) {
+                this.playTaal();
+            }
+        };
     }
 
     // Reset matras index when stopping
     stopTaal() {
+        // Stop the tabla source node if exists
+        if (this.taalSource) {
+            try {
+                this.taalSource.onended = null;
+                this.taalSource.stop();
+            } catch (e) {}
+            this.taalSource = null;
+        }
         this.audioContext.close();
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.stopMatraCounter();
@@ -306,6 +382,7 @@ class ETabla {
         // Hide the matra index
         const matraText = document.getElementById('matraText');
         matraText.style.display = 'none';
+        // Do NOT stop tanpura here; tanpura is independent
     }
 
     startMatraCounter() {
