@@ -70,6 +70,8 @@
 
   <script type="module">
     import { ETabla, generateAudioFiles } from './apps.js';
+    console.log('Imported ETabla:', ETabla);
+    console.log('Imported generateAudioFiles:', generateAudioFiles);
     let eTablaApp;
     async function initializeApp() {
       try {
@@ -83,6 +85,8 @@
           }
         }
         eTablaApp = new ETabla();
+        // Log all method names of the constructed object
+        console.log('eTablaApp methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(eTablaApp)));
         // Load audio files before initializing
         eTablaApp.audioFiles = await generateAudioFiles();
         await eTablaApp.init();
