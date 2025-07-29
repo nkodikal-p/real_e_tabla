@@ -431,11 +431,4 @@ async function generateAudioFiles() {
 }
 
 
-window.addEventListener('load', async () => {
-    const app = new ETabla();
-    app.audioFiles = await generateAudioFiles(); // Dynamically populate audioFiles
-    app.currentTaal = 'Teentaal'; // Set default Taal to Teentaal
-    app.init(); // Initialize UI and event listeners only
-    window.eTablaApp = app;
-    // Do NOT load or play any audio until user clicks Play
-});
+// Initialization is now handled in etabla.html via module script
