@@ -86,12 +86,7 @@ class ETabla {
         }
         this.tablaAudio = new Audio(audioPath);
         this.tablaAudio.loop = true;
-        // On iOS, .play() must be called in direct response to user gesture
-        // So ensure this is only called from Play button event
-        this.tablaAudio.play().catch((e) => {
-            // iOS may block autoplay, so show a message if needed
-            console.warn('Tabla audio play() was blocked:', e);
-        });
+        this.tablaAudio.play();
         // Show the matra index
         const matraText = document.getElementById('matraText');
         matraText.style.display = 'block';
@@ -133,44 +128,42 @@ class ETabla {
     }
 
     async loadAudio() {
-        this.tanpuraAudio = null;
-        const tanpuraToggle = document.getElementById('tanpuraToggle');
-        const tanpuraSwitchLabel = document.getElementById('tanpuraSwitchLabel');
-        const tanpuraVolume = document.getElementById('tanpuraVolume');
-        if (!tanpuraToggle) return;
-
-        // Set default volume to 25%
-        if (tanpuraVolume) {
-            tanpuraVolume.value = 0.25;
-        }
-
-        tanpuraToggle.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                // Only start tanpura, do not affect tabla
-                this.playTanpura();
-                if (tanpuraSwitchLabel) tanpuraSwitchLabel.textContent = 'On';
-            } else {
-                // Only stop tanpura, do not affect tabla
-                this.stopTanpura();
-                if (tanpuraSwitchLabel) tanpuraSwitchLabel.textContent = 'Off';
-            }
-        });
-
-        // Volume slider event
-        if (tanpuraVolume) {
-            tanpuraVolume.addEventListener('input', (e) => {
-                if (this.tanpuraAudio) {
-                    this.tanpuraAudio.volume = parseFloat(e.target.value);
-                }
+        // Always use lowercase for currentTaal as key
+        const taalKey = this.currentTaal.toLowerCase();
+        if (!this.audioFiles || !this.audioFiles[taalKey]) {
+            console.error('Audio files or current Taal not properly set during loadAudio', {
+                currentTaal: taalKey,
+                audioFiles: this.audioFiles
             });
+            return;
         }
 
-        // Also update tanpura if key changes while toggle is on
-        document.getElementById('keySelect').addEventListener('change', (e) => {
-            if (tanpuraToggle.checked) {
-                this.playTanpura();
-            }
-        });
+        const audioPath = this.audioFiles[taalKey]?.[this.currentKey]?.[this.currentBpm];
+        if (!audioPath) {
+            console.error('Audio file not found for the selected BPM and key', {
+                currentTaal: taalKey,
+                currentKey: this.currentKey,
+                currentBpm: this.currentBpm,
+                audioFiles: this.audioFiles
+            });
+            return;
+        }
+
+        try {
+            const response = await fetch(audioPath);
+            const arrayBuffer = await response.arrayBuffer();
+            this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        } catch (error) {
+            console.error('Failed to load audio file:', error);
+        }
+    }
+
+    init() {
+        this.currentTaal = this.currentTaal.toLowerCase();
+        this.setupEventListeners();
+        this.populateTaalOptions();
+        this.updateBpmDisplay();
+        this.setupTanpura();
 
         // Always use lowercase for currentTaal as key
         const taalKey = this.currentTaal;

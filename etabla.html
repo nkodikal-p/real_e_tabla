@@ -65,37 +65,24 @@
 
   <!-- Timestamp -->
   <div style="position: fixed; bottom: 8px; left: 0; width: 100%; text-align: center; color: #bbb; font-size: 0.5em; letter-spacing: 0.5px; z-index: 9999;">
-    real e-tabla V3-07-29-25-18:01 Nilesh Kodikal
+    real e-tabla V3-07-29-25-12:33 Nilesh Kodikal
   </div>
 
-  <script type="module">
-    import { ETabla, generateAudioFiles } from './apps.js';
+  <script type="module" src="apps.js"></script>
+  <!-- Smart initialization script -->
+  <script>
     let eTablaApp;
     async function initializeApp() {
       try {
-        // Wait for DOM elements to exist
-        const requiredIds = [
-          'playTaalButton', 'stopTaalButton', 'taalSelect', 'keySelect', 'bpmValue', 'decreaseBpmButton', 'increaseBpmButton', 'tanpuraToggle', 'tanpuraVolume', 'matraText'
-        ];
-        for (const id of requiredIds) {
-          if (!document.getElementById(id)) {
-            throw new Error(`Missing DOM element: ${id}`);
-          }
-        }
         eTablaApp = new ETabla();
-        // Load audio files before initializing
-        eTablaApp.audioFiles = await generateAudioFiles();
         await eTablaApp.init();
         window.eTablaApp = eTablaApp;
       } catch (error) {
-        // Show the actual error message for debugging
-        console.error('Initialization failed:', error);
-        alert('Failed to initialize eTabla.\n' + (error && error.message ? error.message : error));
+        console.error('All initialization methods failed:', error);
+        alert('Failed to initialize eTabla. Please refresh the page.');
       }
     }
     document.addEventListener('DOMContentLoaded', () => {
-      // Always try to initialize on load
-      initializeApp();
       const playButton = document.getElementById('playTaalButton');
       if (playButton) {
         playButton.addEventListener('click', () => {
