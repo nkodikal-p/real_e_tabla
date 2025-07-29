@@ -1,3 +1,47 @@
+.tanpura-volume-container {
+    margin-bottom: 32px;
+}
+/* Tanpura modern toggle switch styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+  vertical-align: middle;
+}
+.switch input {
+  display: none;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 28px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #4caf50;
+}
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+.switch-label {
+  margin-left: 10px;
+  font-weight: bold;
+  vertical-align: middle;
+}
 html, body {
     height: 100%;
     font-family: Arial, sans-serif; /* Use a modern font */
@@ -124,8 +168,9 @@ img {
     justify-content: center; /* Center horizontally */
     align-items: center; /* Center vertically */
     flex-direction: column; /* Stack elements vertically */
-    margin: 0 auto; /* Center the container horizontally */
+    margin: 0 auto 0 auto; /* Center the container horizontally, no top margin */
     height: auto; /* Adjust height to fit content */
+    margin-top: 8px; /* Reduce whitespace above image */
 }
 
 .image-container img {

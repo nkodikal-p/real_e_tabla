@@ -10,148 +10,108 @@
 </head>
 
 
-<style>
-  body {
-    font-size: 1.18em;
-  }
-</style>
+
 <body>
-
-    <!-- Include apps.js after RubberBand -->
-    <div style="position: fixed; bottom: 8px; left: 0; width: 100%; text-align: center; color: #bbb; font-size: 0.5em; letter-spacing: 0.5px; z-index: 9999;">
-        real e-tabla V3-07-28-25-20:32 Nilesh Kodikal
-    </div>
-
-    <script type="module" src="apps.js"></script>
-
-    <!-- Smart initialization script -->
-    <script>
-        let eTablaApp;
-
-        async function initializeApp() {
-            try {
-                eTablaApp = new ETabla();
-                await eTablaApp.init();
-                window.eTablaApp = eTablaApp;
-            } catch (error) {
-                console.error('All initialization methods failed:', error);
-                alert('Failed to initialize eTabla. Please refresh the page.');
-            }
-        }
-
-        // Fix DOM element issue
-        document.addEventListener('DOMContentLoaded', () => {
-            const playButton = document.getElementById('playTaalButton');
-            if (playButton) {
-                playButton.addEventListener('click', () => {
-                    if (!window.eTablaApp) {
-                        initializeApp();
-                    }
-                });
-            } else {
-                console.error('playTaalButton element not found in the DOM.');
-            }
-        });
-    </script>
-
-    <div class="image-container">
+  <div class="etabla-vertical-wrapper">
+    <!-- 1. Image group -->
+    <div class="etabla-group etabla-group-1">
+      <div class="image-container">
         <img src="images/tablas.jpg" alt="eTabla">
-        <div id="matraText"></div> <!-- Matra text positioned relative to the image -->
+        <div id="matraText"></div>
+      </div>
     </div>
-
-   
-  
-    <!-- Taal selection dropdown -->
-    <select id="taalSelect">
-        <!-- Options will be populated by JavaScript -->
-    </select>
-    <br>
-    <div id="taaldisplay">
-        <div id="taal">
-            <!-- Score will be populated by JavaScript -->
-        </div>
-    </div>
-    <!-- Display the matra index while playing -->
-    <div id="mindexDisplay"> </div>
-
-    <div id="taaldisplay">
-        <!-- Play Taal button-->
+    <!-- 2. Taal selection and Play/Stop group -->
+    <div class="etabla-group etabla-group-2">
+      <select id="taalSelect"></select>
+      <div id="taaldisplay">
+        <div id="taal"></div>
+      </div>
+      <div id="mindexDisplay"></div>
+      <div id="taaldisplay">
         <button class="modern-button" id="playTaalButton">Play</button>
-
-        <!--  Stop button -->
         <button class="modern-button red" id="stopTaalButton">Stop</button>
-
+      </div>
     </div>
-    <!-- Set bpm -->
-    <div id="bpmDisplay">
+    <!-- 3. BPM group -->
+    <div class="etabla-group etabla-group-3">
+      <div id="bpmDisplay">
         <button class="bpm-button" id="decreaseBpmButton">-</button>
         <span id="bpmValue">120</span>
         <button class="bpm-button" id="increaseBpmButton">+</button>
+      </div>
+      <label for="bpm">Tempo</label>
     </div>
-    <label for="bpm">Tempo</label>
-
-    <br>
-    <div>
-        <label for="keySelect">Key:</label>
-        <select id="keySelect">
-            <!-- Options will be dynamically populated by JavaScript -->
-        </select>
+    <!-- 4. Key group -->
+    <div class="etabla-group etabla-group-4">
+      <label for="keySelect">Key:</label>
+      <select id="keySelect"></select>
     </div>
-
-    <!-- Tanpura toggle -->
-    <style>
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 28px;
-      vertical-align: middle;
-    }
-    .switch input {display:none;}
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 28px;
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 22px;
-      width: 22px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-    input:checked + .slider {
-      background-color: #4caf50;
-    }
-    input:checked + .slider:before {
-      transform: translateX(22px);
-    }
-    .switch-label {
-      margin-left: 10px;
-      font-weight: bold;
-      vertical-align: middle;
-    }
-    </style>
-    <div style="margin-top: 10px;">
+    <!-- 5. Tanpura group -->
+    <div class="etabla-group etabla-group-5">
+      <div style="margin-top: 10px;">
         <label for="tanpuraToggle">Tanpura:</label>
         <label class="switch">
-            <input type="checkbox" id="tanpuraToggle">
-            <span class="slider"></span>
+          <input type="checkbox" id="tanpuraToggle">
+          <span class="slider"></span>
         </label>
         <span class="switch-label" id="tanpuraSwitchLabel">Off</span>
+      </div>
+      <div class="tanpura-volume-container" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+        <label for="tanpuraVolume" style="font-size: 0.95em;">Tanpura Volume</label>
+        <input type="range" id="tanpuraVolume" min="0" max="1" step="0.01" value="0.25" style="width: 120px;">
+      </div>
     </div>
-        <div class="tanpura-volume-container" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
-            <label for="tanpuraVolume" style="font-size: 0.95em;">Tanpura Volume</label>
-            <input type="range" id="tanpuraVolume" min="0" max="1" step="0.01" value="0.25" style="width: 120px;">
-        </div>
+  </div>
 
+  <!-- Timestamp -->
+  <div style="position: fixed; bottom: 8px; left: 0; width: 100%; text-align: center; color: #bbb; font-size: 0.5em; letter-spacing: 0.5px; z-index: 9999;">
+    real e-tabla V3-07-28-25-20:32 Nilesh Kodikal
+  </div>
+
+  <script type="module" src="apps.js"></script>
+  <!-- Smart initialization script -->
+  <script>
+    let eTablaApp;
+    async function initializeApp() {
+      try {
+        eTablaApp = new ETabla();
+        await eTablaApp.init();
+        window.eTablaApp = eTablaApp;
+      } catch (error) {
+        console.error('All initialization methods failed:', error);
+        alert('Failed to initialize eTabla. Please refresh the page.');
+      }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const playButton = document.getElementById('playTaalButton');
+      if (playButton) {
+        playButton.addEventListener('click', () => {
+          if (!window.eTablaApp) {
+            initializeApp();
+          }
+        });
+      } else {
+        console.error('playTaalButton element not found in the DOM.');
+      }
+    });
+  </script>
+
+  <style>
+    .etabla-vertical-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      align-items: center;
+      width: 100vw;
+    }
+    .etabla-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
 </body>
 
 </html>

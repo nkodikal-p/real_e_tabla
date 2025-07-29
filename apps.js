@@ -230,8 +230,19 @@ class ETabla {
         });
 
         // Key selection
-        document.getElementById('keySelect').addEventListener('change', (e) => {
+        document.getElementById('keySelect').addEventListener('change', async (e) => {
             this.currentKey = e.target.value;
+            // If tanpura is on, stop and restart it with new key
+            const tanpuraToggle = document.getElementById('tanpuraToggle');
+            if (tanpuraToggle && tanpuraToggle.checked) {
+                this.stopTanpura();
+                await this.playTanpura();
+            }
+            // If tabla is playing, stop and restart with new key
+            if (this.audioBuffer && this.intervalId) {
+                this.stopTaal();
+                this.playTaal();
+            }
         });
 
         // Increase BPM
