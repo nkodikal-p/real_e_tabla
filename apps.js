@@ -443,20 +443,12 @@ async function generateAudioFiles() {
     return audioFiles;
 }
 
+
 window.addEventListener('load', async () => {
     const app = new ETabla();
     app.audioFiles = await generateAudioFiles(); // Dynamically populate audioFiles
-
-    // Set default currentTaal if not already set (explicitly set below)
     app.currentTaal = 'Teentaal'; // Set default Taal to Teentaal
-    app.init(); // Reinitialize the app with the dynamically generated audioFiles
-
-    // Call updateKeyDisplay only if audioFiles and currentTaal are properly set
-    if (app.audioFiles && app.audioFiles[app.currentTaal]) {
-        app.updateKeyDisplay();
-    } else {
-        console.error('Audio files or current Taal not properly set');
-    }
-
+    app.init(); // Initialize UI and event listeners only
     window.eTablaApp = app;
+    // Do NOT load or play any audio until user clicks Play
 });
