@@ -8,15 +8,11 @@ const TAAL_MATRAS_COUNT = {
     'jhaptaal': 10
 };
 
+
 class ETabla {
-    // --- Tanpura logic ---
+    // --- Tanpura logic (HTML5 audio version) ---
     setupTanpura() {
-        this.tanpuraAudioContext = null;
-        this.tanpuraSource = null;
-        this.tanpuraGain = null;
-        this.tanpuraBuffer = null;
-        this.tanpuraBufferUrl = null;
-        this.tanpuraKey = this.currentKey;
+        this.tanpuraAudio = null;
         const tanpuraToggle = document.getElementById('tanpuraToggle');
         const tanpuraSwitchLabel = document.getElementById('tanpuraSwitchLabel');
         const tanpuraVolume = document.getElementById('tanpuraVolume');
@@ -27,9 +23,9 @@ class ETabla {
             tanpuraVolume.value = 0.25;
         }
 
-        tanpuraToggle.addEventListener('change', async (e) => {
+        tanpuraToggle.addEventListener('change', (e) => {
             if (e.target.checked) {
-                await this.playTanpura();
+                this.playTanpura();
                 if (tanpuraSwitchLabel) tanpuraSwitchLabel.textContent = 'On';
             } else {
                 this.stopTanpura();
@@ -40,100 +36,84 @@ class ETabla {
         // Volume slider event
         if (tanpuraVolume) {
             tanpuraVolume.addEventListener('input', (e) => {
-                if (this.tanpuraGain) {
-                    this.tanpuraGain.gain.value = parseFloat(e.target.value);
+                if (this.tanpuraAudio) {
+                    this.tanpuraAudio.volume = parseFloat(e.target.value);
                 }
             });
         }
 
         // Also update tanpura if key changes while toggle is on
-        document.getElementById('keySelect').addEventListener('change', async (e) => {
+        document.getElementById('keySelect').addEventListener('change', (e) => {
             if (tanpuraToggle.checked) {
-                await this.playTanpura();
+                this.playTanpura();
             }
         });
     }
 
-    async playTanpura() {
-        // Stop any currently playing tanpura source immediately
-        if (this.tanpuraSource) {
-            try {
-                this.tanpuraSource.onended = null;
-                this.tanpuraSource.stop();
-            } catch (e) {}
-            this.tanpuraSource = null;
-        }
-        // Use a separate AudioContext for tanpura
-        if (!this.tanpuraAudioContext || this.tanpuraAudioContext.state === 'closed') {
-            this.tanpuraAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
+    playTanpura() {
+        this.stopTanpura();
         const key = this.currentKey;
-        // Replace # with s for file lookup
         const fileKey = key.replace(/#/g, 's');
         const url = `sounds/tanpura/${fileKey}.mp3`;
-
-        // Load and decode the tanpura audio buffer
-        try {
-            if (!this.tanpuraBufferUrl || this.tanpuraBufferUrl !== url) {
-                // Only fetch and decode if URL changed
-                const response = await fetch(url);
-                const arrayBuffer = await response.arrayBuffer();
-                this.tanpuraBuffer = await this.tanpuraAudioContext.decodeAudioData(arrayBuffer);
-                this.tanpuraBufferUrl = url;
-            }
-        } catch (e) {
-            console.error('Failed to load tanpura buffer:', e);
-            return;
-        }
-
-        // Create a gain node for volume control
-        this.tanpuraGain = this.tanpuraAudioContext.createGain();
+        this.tanpuraAudio = new Audio(url);
         const tanpuraVolume = document.getElementById('tanpuraVolume');
-        if (tanpuraVolume) {
-            this.tanpuraGain.gain.value = parseFloat(tanpuraVolume.value) || 0.25;
-        } else {
-            this.tanpuraGain.gain.value = 0.25;
-        }
-
-        // Create and start the buffer source
-        this.tanpuraSource = this.tanpuraAudioContext.createBufferSource();
-        this.tanpuraSource.buffer = this.tanpuraBuffer;
-        this.tanpuraSource.connect(this.tanpuraGain).connect(this.tanpuraAudioContext.destination);
-        this.tanpuraSource.loop = false; // We'll handle looping manually
-        const startTime = this.tanpuraAudioContext.currentTime;
-        this.tanpuraSource.start(startTime);
-
-        // Schedule next loop exactly at the end, but only if toggle is still ON
-        this.tanpuraSource.onended = () => {
-            const tanpuraToggle = document.getElementById('tanpuraToggle');
-            if (tanpuraToggle && tanpuraToggle.checked) {
-                this.playTanpura();
-            }
-        };
+        this.tanpuraAudio.volume = tanpuraVolume ? parseFloat(tanpuraVolume.value) : 0.25;
+        this.tanpuraAudio.loop = true;
+        this.tanpuraAudio.play();
     }
 
     stopTanpura() {
-        if (this.tanpuraSource) {
-            try {
-                this.tanpuraSource.onended = null;
-                this.tanpuraSource.stop();
-            } catch (e) {}
-            this.tanpuraSource = null;
+        if (this.tanpuraAudio) {
+            this.tanpuraAudio.pause();
+            this.tanpuraAudio.currentTime = 0;
+            this.tanpuraAudio = null;
         }
-        if (this.tanpuraGain) {
-            try {
-                this.tanpuraGain.disconnect();
-            } catch (e) {}
-            this.tanpuraGain = null;
-        }
-        if (this.tanpuraAudioContext) {
-            try {
-                this.tanpuraAudioContext.close();
-            } catch (e) {}
-            this.tanpuraAudioContext = null;
-        }
-        // Don't clear buffer or bufferUrl so we can reuse if key doesn't change
     }
+
+    // --- Tabla logic (HTML5 audio version) ---
+    playTaal() {
+        this.stopTaal();
+        const taalKey = this.currentTaal.toLowerCase();
+        const audioPath = this.audioFiles[taalKey]?.[this.currentKey]?.[this.currentBpm];
+        if (!audioPath) {
+            console.error('Audio file not found for the selected BPM and key', {
+                currentTaal: taalKey,
+                currentKey: this.currentKey,
+                currentBpm: this.currentBpm,
+                audioFiles: this.audioFiles
+            });
+            return;
+        }
+        this.tablaAudio = new Audio(audioPath);
+        this.tablaAudio.loop = true;
+        this.tablaAudio.play();
+        // Show the matra index
+        const matraText = document.getElementById('matraText');
+        matraText.style.display = 'block';
+        this.startMatraCounter();
+    }
+
+    stopTaal() {
+        if (this.tablaAudio) {
+            this.tablaAudio.pause();
+            this.tablaAudio.currentTime = 0;
+            this.tablaAudio = null;
+        }
+        this.stopMatraCounter();
+        this.matrasIndex = 0;
+        this.updateMatraDisplay();
+        const matraText = document.getElementById('matraText');
+        matraText.style.display = 'none';
+    }
+
+    // --- Web Audio API version (commented for easy revert) ---
+    /*
+    setupTanpura() { ... }
+    async playTanpura() { ... }
+    stopTanpura() { ... }
+    playTaal() { ... }
+    stopTaal() { ... }
+    */
     constructor() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.audioBuffer = null;
