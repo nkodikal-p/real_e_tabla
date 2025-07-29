@@ -9,15 +9,7 @@ const TAAL_MATRAS_COUNT = {
 };
 
 
-export class ETabla {
-    async init() {
-        this.currentTaal = this.currentTaal.toLowerCase();
-        this.setupEventListeners();
-        this.populateTaalOptions();
-        this.updateBpmDisplay();
-        this.updateKeyDisplay();
-        this.setupTanpura();
-    }
+class ETabla {
     // --- Tanpura logic (HTML5 audio version) ---
     setupTanpura() {
         this.tanpuraAudio = null;
@@ -328,41 +320,53 @@ export class ETabla {
         // console.log('Current key set to:', this.currentKey);
     }
 
-    // Tabla playback using HTML5 Audio
-    playTaal() {
+    // Ensure speed change is effective by reloading audio buffer
+    async playTaal() {
+        // Stop any currently playing audio
         this.stopTaal();
-        const taalKey = this.currentTaal.toLowerCase();
-        const audioPath = this.audioFiles[taalKey]?.[this.currentKey]?.[this.currentBpm];
-        if (!audioPath) {
-            console.error('Audio file not found for the selected BPM and key', {
-                currentTaal: taalKey,
-                currentKey: this.currentKey,
-                currentBpm: this.currentBpm,
-                audioFiles: this.audioFiles
-            });
+
+        await this.loadAudio(); // Reload audio buffer to apply speed change
+
+        if (!this.audioBuffer) {
+            console.error('Audio buffer not loaded');
             return;
         }
-        this.tablaAudio = new Audio(audioPath);
-        this.tablaAudio.loop = true;
-        this.tablaAudio.play().catch((e) => {
-            console.warn('Tabla audio play() was blocked:', e);
-        });
+
+        // Store the source node for later stop
+        this.taalSource = this.audioContext.createBufferSource();
+        this.taalSource.buffer = this.audioBuffer;
+        this.taalSource.connect(this.audioContext.destination);
+        this.taalSource.loop = true; // Use native sample-accurate looping
+
+        // Schedule the first play
+        const startTime = this.audioContext.currentTime;
+        this.taalSource.start(startTime);
+
         // Show the matra index
         const matraText = document.getElementById('matraText');
         matraText.style.display = 'block';
+
+        // Start the matra counter in sync with audio
         this.startMatraCounter();
+        // No onended handler needed; native looping is gapless
     }
 
     // Reset matras index when stopping
     stopTaal() {
-        if (this.tablaAudio) {
-            this.tablaAudio.pause();
-            this.tablaAudio.currentTime = 0;
-            this.tablaAudio = null;
+        // Stop the tabla source node if exists
+        if (this.taalSource) {
+            try {
+                this.taalSource.onended = null;
+                this.taalSource.stop();
+            } catch (e) {}
+            this.taalSource = null;
         }
+        this.audioContext.close();
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.stopMatraCounter();
         this.matrasIndex = 0; // Reset matras index
         this.updateMatraDisplay();
+
         // Hide the matra index
         const matraText = document.getElementById('matraText');
         matraText.style.display = 'none';
@@ -396,7 +400,7 @@ export class ETabla {
     }
 }
 
-export async function generateAudioFiles() {
+async function generateAudioFiles() {
     const audioFiles = {};
 
     // Fetch the JSON file from the local folder
@@ -427,4 +431,11 @@ export async function generateAudioFiles() {
 }
 
 
-// Initialization is now handled in etabla.html via module script
+window.addEventListener('load', async () => {
+    const app = new ETabla();
+    app.audioFiles = await generateAudioFiles(); // Dynamically populate audioFiles
+    app.currentTaal = 'Teentaal'; // Set default Taal to Teentaal
+    app.init(); // Initialize UI and event listeners only
+    window.eTablaApp = app;
+    // Do NOT load or play any audio until user clicks Play
+});
