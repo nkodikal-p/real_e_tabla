@@ -65,11 +65,11 @@
 
   <!-- Timestamp -->
   <div style="position: fixed; bottom: 8px; left: 0; width: 100%; text-align: center; color: #bbb; font-size: 0.5em; letter-spacing: 0.5px; z-index: 9999;">
-    real e-tabla V3-07-29-25-17:56 Nilesh Kodikal
+    real e-tabla V3-07-29-25-18:01 Nilesh Kodikal
   </div>
 
   <script type="module">
-    import { ETabla } from './apps.js';
+    import { ETabla, generateAudioFiles } from './apps.js';
     let eTablaApp;
     async function initializeApp() {
       try {
@@ -83,6 +83,8 @@
           }
         }
         eTablaApp = new ETabla();
+        // Load audio files before initializing
+        eTablaApp.audioFiles = await generateAudioFiles();
         await eTablaApp.init();
         window.eTablaApp = eTablaApp;
       } catch (error) {
