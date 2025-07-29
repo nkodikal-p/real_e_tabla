@@ -338,10 +338,7 @@ class ETabla {
         this.taalSource = this.audioContext.createBufferSource();
         this.taalSource.buffer = this.audioBuffer;
         this.taalSource.connect(this.audioContext.destination);
-        this.taalSource.loop = false; // We'll handle looping manually for perfect timing
-
-        // Calculate duration in seconds
-        const duration = this.audioBuffer.duration;
+        this.taalSource.loop = true; // Use native sample-accurate looping
 
         // Schedule the first play
         const startTime = this.audioContext.currentTime;
@@ -353,14 +350,7 @@ class ETabla {
 
         // Start the matra counter in sync with audio
         this.startMatraCounter();
-
-        // Schedule next loop exactly at the end
-        this.taalSource.onended = () => {
-            // Only loop if not stopped
-            if (this.taalSource) {
-                this.playTaal();
-            }
-        };
+        // No onended handler needed; native looping is gapless
     }
 
     // Reset matras index when stopping
@@ -437,8 +427,7 @@ async function generateAudioFiles() {
         }
     });
 
-    // // Debugging log to verify audioFiles structure
-    // console.log('Generated audioFiles:', audioFiles);
+
 
     return audioFiles;
 }
@@ -447,12 +436,7 @@ window.addEventListener('load', async () => {
     const app = new ETabla();
     app.audioFiles = await generateAudioFiles(); // Dynamically populate audioFiles
 
-    // console.log('Audio files loaded:', app.audioFiles); // Debugging log
-
-    // Set default currentTaal if not already set
-    //app.currentTaal = Object.keys(app.audioFiles)[0] || app.currentTaal;
-
-    // console.log('Default currentTaal set to:', app.currentTaal); // Debugging log
+    // Set default currentTaal if not already set (explicitly set below)
     app.currentTaal = 'Teentaal'; // Set default Taal to Teentaal
     app.init(); // Reinitialize the app with the dynamically generated audioFiles
 
